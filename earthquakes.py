@@ -36,7 +36,7 @@ def get_data():
 
 def count_earthquakes(data):
     """Get the total number of earthquakes in the response."""
-    return ...
+    return len(data['features'])
 
 
 def get_magnitude(earthquake):
