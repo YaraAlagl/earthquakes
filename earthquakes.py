@@ -54,7 +54,20 @@ def get_location(earthquake):
 
 def get_maximum(data):
     """Get the magnitude and location of the strongest earthquake in the data."""
-    ...
+   max_quake=None
+    max_mag=float('-inf')
+
+    for quake in data['features']:
+        mag = get_magnitude(quake)
+        if mag is not None and mag > max_mag:
+            max_mag=mag
+            max_quake=quake
+
+        if max_quake:
+            location =get_location(max_quake)
+            return max_mag, location
+        else:
+            return None, None
 
 
 # With all the above functions defined, we can now call them and get the result
