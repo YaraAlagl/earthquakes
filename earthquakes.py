@@ -25,18 +25,21 @@ def get_data():
     # The response we get back is an object with several fields.
     # The actual contents we care about are in its text field:
     text = response.text
+    # Save the raw text to file (not double-encoded)
+    with open("earthquakes-response.json", "w", encoding="utf-8") as f:
+        f.write(text)
+
     # To understand the structure of this text, you may want to save it
     # to a file and open it in VS Code or a browser.
     # See the README file for more information.
-    data = json.loads(text)
 
     # We need to interpret the text to get values that we can work with.
     # What format is the text in? How can we load the values?
-    return data
+    return json.loads(text)
 
 def count_earthquakes(data):
     """Get the total number of earthquakes in the response."""
-    return len(data['features'])
+    return data['metadata']['count']
 
 
 def get_magnitude(earthquake):
@@ -47,27 +50,21 @@ def get_magnitude(earthquake):
 def get_location(earthquake):
     """Retrieve the latitude and longitude of an earthquake item."""
     # There are three coordinates, but we don't care about the third (altitude)
-    coords = earthquake['geometry']['coordinates']
-    latitude, longitude = coords[0], coords[1]
-    return (latitude, longitude)
+    return earthquake['geometry']['coordinates'][1], earthquake['geometry']['coordinates'][0]
 
 
 def get_maximum(data):
     """Get the magnitude and location of the strongest earthquake in the data."""
-    max_quake=None
-    max_mag=float('-inf')
+    max_magnitude = -1
+    max_location = None
 
-    for quake in data['features']:
-        mag = get_magnitude(quake)
-        if mag is not None and mag > max_mag:
-            max_mag=mag
-            max_quake=quake
+    for earthquake in data['features']:
+        magnitude = get_magnitude(earthquake)
+        if magnitude > max_magnitude:
+            max_magnitude = magnitude
+            max_location = get_location(earthquake)
 
-        if max_quake:
-            location =get_location(max_quake)
-            return max_mag, location
-        else:
-            return None, None
+    return max_magnitude, max_location
 
 
 # With all the above functions defined, we can now call them and get the result
