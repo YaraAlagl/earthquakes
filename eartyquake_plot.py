@@ -1,6 +1,6 @@
 from datetime import date
 import requests
-
+import json
 import matplotlib.pyplot as plt
 
 
@@ -18,6 +18,18 @@ def get_data():
             "endtime": "2018-10-11",
             "orderby": "time-asc"}
    )
+    text = response.text
+    # Save the raw text to file (not double-encoded)
+    with open("earthquakes-response.json", "w", encoding="utf-8") as f:
+        f.write(text)
+
+    # To understand the structure of this text, you may want to save it
+    # to a file and open it in VS Code or a browser.
+    # See the README file for more information.
+
+    # We need to interpret the text to get values that we can work with.
+    # What format is the text in? How can we load the values?
+    return json.loads(text)
 
 def get_year(earthquake):
     """Extract the year in which an earthquake happened."""
