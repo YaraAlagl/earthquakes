@@ -32,7 +32,7 @@ def get_year(earthquake):
 
 def get_magnitude(earthquake):
     """Retrive the magnitude of an earthquake item."""
-    ...
+    return earthquake['properties']['mag']
 
 
 # This is function you may want to create to break down the computations,
