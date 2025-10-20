@@ -1,11 +1,12 @@
 from datetime import date
+import requests
 
 import matplotlib.pyplot as plt
 
 
 def get_data():
     """Retrieve the data we will be working with."""
-   response = requests.get(
+    response = requests.get(
         "http://earthquake.usgs.gov/fdsnws/event/1/query.geojson",
         params={
             'starttime': "2000-01-01",
@@ -42,7 +43,16 @@ def get_magnitudes_per_year(earthquakes):
     
     Returns a dictionary with years as keys, and lists of magnitudes as values.
     """
-    ...
+    magnitudes_per_year = {}
+    for earthquake in earthquakes:
+        year = get_year(earthquake)
+        magnitude = get_magnitude(earthquake)
+        if magnitude is not None:
+            continue
+        if year not in magnitudes_per_year:
+            magnitudes_per_year[year] = []
+        magnitudes_per_year[year].append(magnitude)
+    return magnitudes_per_year
 
 
 def plot_average_magnitude_per_year(earthquakes):
