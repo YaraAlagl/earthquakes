@@ -109,7 +109,31 @@ def plot_number_per_year(earthquakes):
     plt.show()
     
 
+def plot_longitude_latitude(earthquakes):
+    """Plot the locations of earthquakes on a longitude-latitude plot and scale the size of the points based on magnitude of the earthquake."""
+    longitudes = []
+    latitudes = []
+    magnitudes = []
+    for earthquake in earthquakes:
+        longitude = earthquake['geometry']['coordinates'][0]
+        latitude = earthquake['geometry']['coordinates'][1]
+        magnitude = get_magnitude(earthquake)
+        if magnitude is None:
+            continue
+        longitudes.append(longitude)
+        latitudes.append(latitude)
+        magnitudes.append(magnitude * 10)  # Scale magnitude for better visibility
 
+    plt.scatter(longitudes, latitudes, s=magnitudes, alpha=0.5)
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.title("Earthquake Locations and Magnitudes")
+    plt.grid(True)
+    plt.show()
+
+
+    
+    
 
 # Get the data we will work with
 quakes = get_data()['features']
@@ -119,3 +143,4 @@ quakes = get_data()['features']
 plot_number_per_year(quakes)
 plt.clf()  # This clears the figure, so that we don't overlay the two plots
 plot_average_magnitude_per_year(quakes)
+plot_longitude_latitude(quakes)
