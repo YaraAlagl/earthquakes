@@ -1,4 +1,4 @@
-rom datetime import date
+from datetime import date
 
 import matplotlib.pyplot as plt
 
