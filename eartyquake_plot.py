@@ -79,6 +79,7 @@ def plot_average_magnitude_per_year(earthquakes):
         average_magnitudes.append(average_magnitude)
     
     plt.plot(years, average_magnitudes)
+    plt.xlim(2000,2018)
     plt.xlabel("Year")
     plt.ylabel("Average Magnitude")
     plt.title("Average Earthquake Magnitude per Year")
@@ -100,6 +101,7 @@ def plot_number_per_year(earthquakes):
     counts = [counts_per_year[year] for year in years]
 
     plt.plot(years, counts)
+    plt.xlim(2000,2018)
     plt.xlabel("Year")
     plt.ylabel("Number of Earthquakes")
     plt.title("Number of Earthquakes per Year")
