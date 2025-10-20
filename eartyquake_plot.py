@@ -59,7 +59,7 @@ def get_magnitudes_per_year(earthquakes):
     for earthquake in earthquakes:
         year = get_year(earthquake)
         magnitude = get_magnitude(earthquake)
-        if magnitude is not None:
+        if magnitude is None:
             continue
         if year not in magnitudes_per_year:
             magnitudes_per_year[year] = []
