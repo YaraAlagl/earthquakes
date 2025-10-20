@@ -110,7 +110,15 @@ def plot_number_per_year(earthquakes):
     plt.show()
     
 
-def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
+def plot_longitude_latitude_with_histograms(earthquakes, binsize=1, year=None):
+    """
+    Plot earthquake locations with histograms on top and right.
+    
+    Parameters:
+        earthquakes : list of earthquake dicts
+        binsize : float, bin size for histograms (in degrees)
+        year : int or None, only show earthquakes from this year if provided
+    """
     # Bounds
     MAX_LAT = 58.723
     MIN_LAT = 50.008
@@ -120,6 +128,10 @@ def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
     longs, lats, mags = [], [], []
 
     for eq in earthquakes:
+        # Filter by year if specified
+        if year is not None and get_year(eq) != year:
+            continue
+
         lon, lat = eq['geometry']['coordinates'][:2]
         mag = get_magnitude(eq)
         if mag is None:
@@ -129,11 +141,15 @@ def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
             lats.append(lat)
             mags.append(mag * 10)
 
+    if not longs:
+        print(f"No earthquakes found for year {year}.")
+        return
+
     longs = np.array(longs)
     lats = np.array(lats)
     mags = np.array(mags)
 
-    # --- Figure layout with GridSpec ---
+    # --- Figure layout ---
     fig = plt.figure(figsize=(10, 8))
     gs = fig.add_gridspec(2, 2, width_ratios=(4, 1), height_ratios=(1, 4),
                           wspace=0.05, hspace=0.05)
@@ -142,7 +158,7 @@ def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
     ax_histx = fig.add_subplot(gs[0, 0], sharex=ax_scatter)
     ax_histy = fig.add_subplot(gs[1, 1], sharey=ax_scatter)
 
-    # --- Basemap on scatter axes ---
+    # --- Basemap ---
     pad_lon = (MAX_LON - MIN_LON) * 0.03
     pad_lat = (MAX_LAT - MIN_LAT) * 0.03
 
@@ -167,18 +183,23 @@ def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
     m.scatter(x, y, s=mags, c='red', alpha=0.6, edgecolors='k', zorder=5)
 
     # --- Histograms ---
-    ax_histx.hist(longs, bins=np.arange(MIN_LON, MAX_LON + binsize, binsize), color='gray', edgecolor='black')
-    ax_histx.axis('off')  # hide axes for clean look
+    ax_histx.hist(longs, bins=np.arange(MIN_LON, MAX_LON + binsize, binsize),
+                  color='gray', edgecolor='black')
+    ax_histx.axis('off')
 
     ax_histy.hist(lats, bins=np.arange(MIN_LAT, MAX_LAT + binsize, binsize),
-                   orientation='horizontal', color='gray', edgecolor='black')
+                  orientation='horizontal', color='gray', edgecolor='black')
     ax_histy.axis('off')
 
     ax_scatter.set_xlabel("Longitude")
     ax_scatter.set_ylabel("Latitude")
-    ax_scatter.set_title("Earthquakes with Longitude/Latitude Histograms")
+    title = f"Earthquakes with Longitude/Latitude Histograms"
+    if year is not None:
+        title += f" ({year})"
+    ax_scatter.set_title(title)
 
     plt.show()
+
 
 
     
