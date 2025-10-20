@@ -2,7 +2,7 @@ from datetime import date
 import requests
 import json
 import matplotlib.pyplot as plt
-
+from mpl_toolkits.basemap import Basemap
 
 def get_data():
     """Retrieve the data we will be working with."""
@@ -110,25 +110,54 @@ def plot_number_per_year(earthquakes):
     
 
 def plot_longitude_latitude(earthquakes):
-    """Plot the locations of earthquakes on a longitude-latitude plot and scale the size of the points based on magnitude of the earthquake."""
-    longitudes = []
-    latitudes = []
-    magnitudes = []
-    for earthquake in earthquakes:
-        longitude = earthquake['geometry']['coordinates'][0]
-        latitude = earthquake['geometry']['coordinates'][1]
-        magnitude = get_magnitude(earthquake)
-        if magnitude is None:
-            continue
-        longitudes.append(longitude)
-        latitudes.append(latitude)
-        magnitudes.append(magnitude * 10)  # Scale magnitude for better visibility
+    # your bounds (as strings in your snippet) → cast to float
+    MAX_LAT = float("58.723")
+    MIN_LAT = float("50.008")
+    MAX_LON = float("1.67")
+    MIN_LON = float("-9.756")
+    """Plot earthquake locations within the given bounding box with coastlines (Basemap)."""
+    longs, lats, mags = [], [], []
 
-    plt.scatter(longitudes, latitudes, s=magnitudes, alpha=0.5)
-    plt.xlabel("Longitude")
-    plt.ylabel("Latitude")
-    plt.title("Earthquake Locations and Magnitudes")
-    plt.grid(True)
+    for eq in earthquakes:
+        lon = eq['geometry']['coordinates'][0]
+        lat = eq['geometry']['coordinates'][1]
+        mag = get_magnitude(eq)
+        if mag is None:
+            continue
+        # keep only points inside the box
+        if (MIN_LON <= lon <= MAX_LON) and (MIN_LAT <= lat <= MAX_LAT):
+            longs.append(lon)
+            lats.append(lat)
+            mags.append(mag * 10)  # scale for visibility
+
+    # small padding so markers near edges aren't clipped
+    pad_lon = (MAX_LON - MIN_LON) * 0.03
+    pad_lat = (MAX_LAT - MIN_LAT) * 0.03
+
+    plt.figure(figsize=(10, 8))
+    m = Basemap(
+        projection='cyl',
+        llcrnrlon=MIN_LON - pad_lon, urcrnrlon=MAX_LON + pad_lon,
+        llcrnrlat=MIN_LAT - pad_lat, urcrnrlat=MAX_LAT + pad_lat,
+        resolution='i'   # 'l' low, 'i' intermediate, 'h' high (needs basemap-data-hires)
+    )
+    m.drawcoastlines()
+    m.drawcountries(linewidth=0.5)
+    m.drawmapboundary(fill_color='lightblue')
+    m.fillcontinents(color='lightgray', lake_color='lightblue')
+
+    # nice graticule spacing based on box size
+    dlon = max(1, int((MAX_LON - MIN_LON) // 2) or 1)
+    dlat = max(1, int((MAX_LAT - MIN_LAT) // 2) or 1)
+    m.drawparallels(range(int(MIN_LAT), int(MAX_LAT)+1, dlat), labels=[1,0,0,0], linewidth=0.2)
+    m.drawmeridians(range(int(MIN_LON), int(MAX_LON)+1, dlon), labels=[0,0,0,1], linewidth=0.2)
+
+    # plot points
+    x, y = m(longs, lats)
+    m.scatter(x, y, s=mags, c='red', alpha=0.6, edgecolors='k', zorder=5)
+
+    plt.title("Earthquakes (bounded map)")
+    plt.xlabel("Longitude"); plt.ylabel("Latitude")
     plt.show()
 
 
