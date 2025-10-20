@@ -3,6 +3,7 @@ import requests
 import json
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+import numpy as np
 
 def get_data():
     """Retrieve the data we will be working with."""
@@ -109,55 +110,74 @@ def plot_number_per_year(earthquakes):
     plt.show()
     
 
-def plot_longitude_latitude(earthquakes):
-    # your bounds (as strings in your snippet) → cast to float
-    MAX_LAT = float("58.723")
-    MIN_LAT = float("50.008")
-    MAX_LON = float("1.67")
-    MIN_LON = float("-9.756")
-    """Plot earthquake locations within the given bounding box with coastlines (Basemap)."""
+def plot_longitude_latitude_with_histograms(earthquakes, binsize=1):
+    # Bounds
+    MAX_LAT = 58.723
+    MIN_LAT = 50.008
+    MAX_LON = 1.67
+    MIN_LON = -9.756
+
     longs, lats, mags = [], [], []
 
     for eq in earthquakes:
-        lon = eq['geometry']['coordinates'][0]
-        lat = eq['geometry']['coordinates'][1]
+        lon, lat = eq['geometry']['coordinates'][:2]
         mag = get_magnitude(eq)
         if mag is None:
             continue
-        # keep only points inside the box
         if (MIN_LON <= lon <= MAX_LON) and (MIN_LAT <= lat <= MAX_LAT):
             longs.append(lon)
             lats.append(lat)
-            mags.append(mag * 10)  # scale for visibility
+            mags.append(mag * 10)
 
-    # small padding so markers near edges aren't clipped
+    longs = np.array(longs)
+    lats = np.array(lats)
+    mags = np.array(mags)
+
+    # --- Figure layout with GridSpec ---
+    fig = plt.figure(figsize=(10, 8))
+    gs = fig.add_gridspec(2, 2, width_ratios=(4, 1), height_ratios=(1, 4),
+                          wspace=0.05, hspace=0.05)
+
+    ax_scatter = fig.add_subplot(gs[1, 0])
+    ax_histx = fig.add_subplot(gs[0, 0], sharex=ax_scatter)
+    ax_histy = fig.add_subplot(gs[1, 1], sharey=ax_scatter)
+
+    # --- Basemap on scatter axes ---
     pad_lon = (MAX_LON - MIN_LON) * 0.03
     pad_lat = (MAX_LAT - MIN_LAT) * 0.03
 
-    plt.figure(figsize=(10, 8))
     m = Basemap(
         projection='cyl',
         llcrnrlon=MIN_LON - pad_lon, urcrnrlon=MAX_LON + pad_lon,
         llcrnrlat=MIN_LAT - pad_lat, urcrnrlat=MAX_LAT + pad_lat,
-        resolution='i'   # 'l' low, 'i' intermediate, 'h' high (needs basemap-data-hires)
+        resolution='i',
+        ax=ax_scatter
     )
     m.drawcoastlines()
     m.drawcountries(linewidth=0.5)
     m.drawmapboundary(fill_color='lightblue')
     m.fillcontinents(color='lightgray', lake_color='lightblue')
 
-    # nice graticule spacing based on box size
     dlon = max(1, int((MAX_LON - MIN_LON) // 2) or 1)
     dlat = max(1, int((MAX_LAT - MIN_LAT) // 2) or 1)
     m.drawparallels(range(int(MIN_LAT), int(MAX_LAT)+1, dlat), labels=[1,0,0,0], linewidth=0.2)
     m.drawmeridians(range(int(MIN_LON), int(MAX_LON)+1, dlon), labels=[0,0,0,1], linewidth=0.2)
 
-    # plot points
     x, y = m(longs, lats)
     m.scatter(x, y, s=mags, c='red', alpha=0.6, edgecolors='k', zorder=5)
 
-    plt.title("Earthquakes (bounded map)")
-    plt.xlabel("Longitude"); plt.ylabel("Latitude")
+    # --- Histograms ---
+    ax_histx.hist(longs, bins=np.arange(MIN_LON, MAX_LON + binsize, binsize), color='gray', edgecolor='black')
+    ax_histx.axis('off')  # hide axes for clean look
+
+    ax_histy.hist(lats, bins=np.arange(MIN_LAT, MAX_LAT + binsize, binsize),
+                   orientation='horizontal', color='gray', edgecolor='black')
+    ax_histy.axis('off')
+
+    ax_scatter.set_xlabel("Longitude")
+    ax_scatter.set_ylabel("Latitude")
+    ax_scatter.set_title("Earthquakes with Longitude/Latitude Histograms")
+
     plt.show()
 
 
@@ -172,4 +192,5 @@ quakes = get_data()['features']
 plot_number_per_year(quakes)
 plt.clf()  # This clears the figure, so that we don't overlay the two plots
 plot_average_magnitude_per_year(quakes)
-plot_longitude_latitude(quakes)
+#plot_longitude_latitude(quakes)
+plot_longitude_latitude_with_histograms(quakes, binsize=1)
