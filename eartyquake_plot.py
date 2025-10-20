@@ -76,7 +76,24 @@ def plot_average_magnitude_per_year(earthquakes):
 
 
 def plot_number_per_year(earthquakes):
-    ...
+    """Plot the number of earthquakes per year."""
+    counts_per_year = {}
+    for earthquake in earthquakes:
+        year = get_year(earthquake)
+        if year not in counts_per_year:
+            counts_per_year[year] = 0
+        counts_per_year[year] += 1
+
+    years = sorted(counts_per_year.keys())
+    counts = [counts_per_year[year] for year in years]
+
+    plt.plot(years, counts)
+    plt.xlabel("Year")
+    plt.ylabel("Number of Earthquakes")
+    plt.title("Number of Earthquakes per Year")
+    plt.grid(True)
+    plt.show()
+    
 
 
 
